@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hunter Dashboard | THE SSC SCHOLARS OFFICIAL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/hub.css">
+<link rel="stylesheet" href="assets/dashboard.css">
+</head>
+<body class="hd-body">
+<div class="grain"></div>
+<div class="vignette"></div>
+<div class="sys-glow"></div>
+
+<div id="app">
+  <header id="topbar">
+    <a class="brand" href="./" aria-label="THE SSC SCHOLARS OFFICIAL, Mock Test Hub">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">THE SSC SCHOLARS OFFICIAL<span class="brand-dim"> // HUNTER</span></span>
+    </a>
+    <div class="nav-btns">
+      <a class="chip-btn" href="index.html">Mock Hub</a>
+      <a class="chip-btn" href="saved.html">Saved</a>
+      <button class="chip-btn" id="backupBtn" type="button">Backup</button>
+    </div>
+  </header>
+
+  <main id="viewport" class="hd">
+    <div class="sys-msg" id="sysMsg">
+      <span class="tag">[SYSTEM]</span>
+      <span id="sysText"></span>
+      <button type="button" class="mini" id="nextQuote" title="New message">&#8635;</button>
+    </div>
+
+    <div class="hd-grid g2">
+      <section class="win status" id="statusWin"></section>
+      <section class="win" id="statsWin"></section>
+    </div>
+
+    <div class="hd-grid g2">
+      <section class="win" id="questWin"></section>
+      <section class="win" id="adviceWin"></section>
+    </div>
+
+    <section class="win" id="subjWin"></section>
+
+    <div class="hd-grid g2">
+      <section class="win" id="trendWin"></section>
+      <section class="win" id="heatWin"></section>
+    </div>
+
+    <div class="hd-grid g2">
+      <section class="win" id="battleWin"></section>
+      <section class="win" id="achWin"></section>
+    </div>
+  </main>
+</div>
+
+<!-- profile / awakening -->
+<div class="hd-modal" id="setupModal" hidden>
+  <div class="win setup">
+    <h3 class="wt" id="setupTitle">PLAYER REGISTRATION</h3>
+    <p class="setup-sub" id="setupSub">The System has chosen you. Create your Hunter profile.</p>
+    <div class="setup-grid">
+      <div class="setup-prev"><div class="av-frame big" id="setupPrev"></div></div>
+      <div class="setup-form">
+        <label class="fl">Hunter name</label>
+        <input id="setupName" maxlength="16" autocomplete="off" placeholder="Enter your name">
+        <label class="fl">Character</label>
+        <div class="seg2" id="setupGender">
+          <button type="button" data-g="m">Male</button>
+          <button type="button" data-g="f">Female</button>
+        </div>
+        <label class="fl">Aura colour</label>
+        <div class="auras" id="setupAuras"></div>
+        <label class="chk"><input type="checkbox" id="setupAuto"> <span>Mood follows my last mock result</span></label>
+      </div>
+    </div>
+    <label class="fl">Expression</label>
+    <div class="faces" id="setupFaces"></div>
+    <div class="setup-actions">
+      <button type="button" class="hd-btn ghost" id="setupCancel" hidden>Cancel</button>
+      <button type="button" class="hd-btn" id="setupSave" disabled>Awaken</button>
+    </div>
+  </div>
+</div>
+
+<!-- level up -->
+<div class="hd-modal" id="lvlModal" hidden>
+  <div class="lvl-box">
+    <div class="lvl-kicker">[SYSTEM]</div>
+    <div class="lvl-title">LEVEL UP!</div>
+    <div class="lvl-num" id="lvlNum"></div>
+    <div class="lvl-rank" id="lvlRank"></div>
+    <p class="lvl-msg" id="lvlMsg"></p>
+    <button type="button" class="hd-btn" id="lvlClose">Continue</button>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/common.js"></script>
+<script src="assets/hunter.js"></script>
+<script src="assets/dashboard.js"></script>
+<script src="assets/backup.js"></script>
+</body>
+</html>

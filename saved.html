@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saved Questions | THE SSC SCHOLARS OFFICIAL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/hub.css">
+<link rel="stylesheet" href="assets/saved.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+</head>
+<body>
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<div id="app">
+  <header id="topbar">
+    <a class="brand" href="./" aria-label="THE SSC SCHOLARS OFFICIAL, Mock Test Hub">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">THE SSC SCHOLARS OFFICIAL<span class="brand-dim"> // SAVED</span></span>
+    </a>
+    <div class="nav-btns">
+      <a class="chip-btn" href="dashboard.html">Dashboard</a>
+      <button class="chip-btn" id="backupBtn" type="button">Backup</button>
+      <a class="chip-btn" href="index.html">Mock Hub</a>
+    </div>
+  </header>
+
+  <main id="viewport">
+    <section class="hero-wrap sv-hero">
+      <div class="eyebrow">Bookmarked questions</div>
+      <h1 class="hero-title">Saved <span class="dim">Questions</span></h1>
+      <p class="hero-sub">Questions you saved during a mock appear here, subject-wise and year-wise. Tap a question to solve it again, see what you marked in the mock, or open the solution directly.</p>
+    </section>
+
+    <div class="eyebrow">Select saved questions</div>
+    <section class="picker" aria-label="Select saved questions">
+      <div class="field">
+        <span class="lbl" id="yearLbl">Year</span>
+        <div class="seg" id="yearSeg" role="group" aria-labelledby="yearLbl"></div>
+      </div>
+      <div class="field">
+        <label class="lbl" for="selSubject">Subject</label>
+        <select id="selSubject"></select>
+      </div>
+      <div class="field">
+        <label class="lbl" for="selChapter">Chapter</label>
+        <select id="selChapter" disabled></select>
+      </div>
+    </section>
+
+    <div id="svNote" class="note" role="status"></div>
+
+    <section id="listView" hidden>
+      <h2 class="sv-list-title" id="listTitle"></h2>
+      <div class="sv-list" id="qList"></div>
+    </section>
+  </main>
+
+  <footer class="foot"><span>Saved questions live in this browser only. Clearing site data or using another browser/device starts with an empty list.</span></footer>
+</div>
+
+<!-- viewer -->
+<div id="viewer" hidden>
+  <div class="v-bar">
+    <button type="button" class="v-btn" id="vClose">&larr; Back</button>
+    <div class="v-count" id="vCount"></div>
+    <select id="vLang" class="v-lang" hidden>
+      <option value="en">English</option><option value="hi">Hindi</option><option value="bi">EN + HI</option>
+    </select>
+    <button type="button" class="v-btn" id="vPrev">&lsaquo; Prev</button>
+    <button type="button" class="v-btn pri" id="vNext">Next &rsaquo;</button>
+  </div>
+  <div class="v-scroll">
+    <div class="v-card">
+      <div class="v-meta" id="vMeta"></div>
+      <div class="v-mock" id="vMock"></div>
+      <div id="vLoad" class="v-load">Loading question...</div>
+      <div id="vBody" hidden>
+        <div class="v-q" id="vQ"></div>
+        <div class="v-qimg" id="vQImg"></div>
+        <div class="v-opts" id="vOpts"></div>
+        <div class="v-fb" id="vFb"></div>
+        <div class="v-expl" id="vExpl" hidden></div>
+      </div>
+      <div class="v-tools">
+        <button type="button" class="v-tool" id="tMine">My mock answer</button>
+        <button type="button" class="v-tool" id="tSol">Show solution</button>
+        <button type="button" class="v-tool" id="tReset">Try again</button>
+        <button type="button" class="v-tool danger" id="tRemove">Remove from Saved</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="sv-toast" id="svToast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/common.js"></script>
+<script src="assets/saved.js"></script>
+<script src="assets/backup.js"></script>
+</body>
+</html>

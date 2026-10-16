@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Mock Hub | THE SSC SCHOLARS OFFICIAL</title>
+<meta name="description" content="SSC CGL Mains full mock tests with sectional timers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/hub.css">
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<div id="app">
+  <header id="topbar">
+    <a class="brand" href="./" aria-label="THE SSC SCHOLARS OFFICIAL, Mock Test Hub">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">THE SSC SCHOLARS OFFICIAL<span class="brand-dim"> // MOCK HUB</span></span>
+    </a>
+    <div class="nav-btns">
+      <a class="chip-btn" id="dashLink" href="dashboard.html">Dashboard</a>
+      <a class="chip-btn" id="savedLink" href="saved.html">Saved<span id="savedCount"></span></a>
+      <button class="chip-btn" id="backupBtn" type="button">Backup</button>
+    </div>
+  </header>
+
+  <main id="viewport">
+    <section class="hero-wrap">
+      <div class="eyebrow">Full mocks // Mains pattern</div>
+      <h1 class="hero-title">SSC CGL Mains <span class="dim">Full Mock Hub</span></h1>
+      <p class="hero-sub">Full-length mocks in the real Mains pattern: Part 1 (Maths + Reasoning), Part 2 (English + GS) and Part 3 (Computer, qualifying). Every section has its own timer, and a submitted section stays locked. Each mock opens in a new tab.</p>
+      <div class="hero-stats" id="heroStats"></div>
+    </section>
+
+    <div class="eyebrow">Select a mock</div>
+    <section class="picker" aria-label="Filter mocks">
+      <div class="field">
+        <span class="lbl" id="fLbl">Show</span>
+        <div class="seg" id="filterSeg" role="group" aria-labelledby="fLbl"></div>
+      </div>
+    </section>
+
+    <div id="note" class="note" hidden role="status"></div>
+
+    <section id="sheet" class="sheet" aria-live="polite"></section>
+  </main>
+
+  <footer class="foot">
+    <span>Your progress is saved in this browser only. Leave a mock midway and use Resume to continue from where you stopped.</span>
+  </footer>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/common.js"></script>
+<script src="assets/hub.js"></script>
+<script src="assets/backup.js"></script>
+</body>
+</html>
