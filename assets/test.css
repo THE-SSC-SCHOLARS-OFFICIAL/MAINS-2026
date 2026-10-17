@@ -71,7 +71,7 @@ button{cursor:pointer;}
 [data-theme="dark"] .ws-intro{background:#16263f;color:#a9c8ff;border-color:#27456f;}
 .sym-list .sym{display:flex;align-items:center;gap:14px;padding:9px 0;border-bottom:1px dashed var(--line);}
 .sym-list .sym:last-child{border-bottom:none;}
-.opt-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;}
+.ws-fb.opt-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;}
 .opt-col label{display:block;font-weight:700;font-size:12.5px;margin-bottom:5px;}
 .opt-practice{flex:1;min-width:260px;display:flex;justify-content:space-between;gap:14px;align-items:center;}
 .opt-practice .ttl{font-weight:800;}
@@ -156,11 +156,12 @@ body.pal-hidden .qcol{margin-right:0;}
 .opt-row,.soloption{display:flex;align-items:stretch;background:var(--card);border-bottom:2px solid #2b3140;position:relative;cursor:default;}
 [data-theme="dark"] .opt-row,[data-theme="dark"] .soloption{border-bottom-color:#8791a8;}
 .opt-row:last-child,.soloption:last-child{border-bottom:none;}
-.opt-radio{width:62px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-right:2px solid #2b3140;cursor:pointer;}
+.opt-radio{width:62px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-right:2px solid #2b3140;cursor:default;}
 [data-theme="dark"] .opt-radio{border-right-color:#8791a8;}
-.opt-radio:hover{background:var(--opt-hover);}
-.opt-radio input{width:26px;height:26px;margin:0;accent-color:var(--accent);cursor:pointer;pointer-events:none;}
-.opt-body{flex:1;min-width:0;padding:11px 16px;display:flex;flex-direction:column;justify-content:center;}
+.opt-circle{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;cursor:pointer;flex-shrink:0;}
+.opt-circle:hover{background:var(--opt-hover);}
+.opt-radio input{width:22px;height:22px;margin:0;accent-color:var(--accent);cursor:pointer;pointer-events:none;}
+.opt-body{flex:1;min-width:0;padding:11px 16px;display:block;align-self:center;overflow-wrap:break-word;}
 .opt-row.selected{background:var(--opt-sel);}
 .opt-letter{width:52px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--muted);border-right:2px solid #2b3140;}
 [data-theme="dark"] .opt-letter{border-right-color:#8791a8;}
