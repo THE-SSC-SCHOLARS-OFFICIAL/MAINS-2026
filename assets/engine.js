@@ -532,7 +532,7 @@ function renderQuestion(){
     var val = String(idx+1);
     var img = opt.image ? '<div class="qimg"><img src="' + opt.image + '" alt="option image"></div>' : "";
     html += '<div class="opt-row" data-opt="' + val + '">' +
-      '<div class="opt-radio" title="Tap the circle to select" onclick="pickOption(\'' + val + '\', event)"><input type="radio" name="opt" value="' + val + '" tabindex="-1"></div>' +
+      '<div class="opt-radio"><span class="opt-circle" title="Tap the circle to select" onclick="pickOption(\'' + val + '\', event)"><input type="radio" name="opt" value="' + val + '" tabindex="-1"></span></div>' +
       '<div class="opt-body">' + optHtml(q, key, state.lang) + img + '</div></div>';
   });
   $("qOptions").innerHTML = html;
