@@ -2,7 +2,10 @@
 (function () {
   var C = window.HUB_CONFIG, H = window.HubCommon;
   var YEAR = C.years[0], SUBJ = C.subjects[0].key;
-  var S = { data: null, filter: "all", seq: 0 };
+  var G = window.AdminGate;
+  var MODE_KEY = "sscscholars_hub_mode";
+  function startMode() { var m = "live"; try { m = localStorage.getItem(MODE_KEY) || "live"; } catch (e) {} return (m === "test" && G.isAdmin()) ? "test" : "live"; }
+  var S = { data: null, filter: "all", seq: 0, mode: startMode(), cache: {} };
   var FILTERS = [["all", "All"], ["ready", "Ready"], ["done", "Attempted"]];
 
   function $(id) { return document.getElementById(id); }
@@ -19,7 +22,7 @@
   }
 
   function mocks() { return (S.data && S.data.mocks) || []; }
-  function setId(m) { return "mock_" + m.mock; }
+  function setId(m) { return m.live ? m.id : "mock_" + m.mock; }
   function startUrl(m) { return "test.html?y=" + encodeURIComponent(YEAR) + "&s=" + encodeURIComponent(SUBJ) + "&id=" + encodeURIComponent(setId(m)); }
 
   function renderStats() {
@@ -27,9 +30,37 @@
     var all = mocks(), ready = all.filter(H.mockReady), done = 0;
     ready.forEach(function (m) { var st = H.readStatus(YEAR, SUBJ, setId(m)); if (st && st.kind === "done") done++; });
     var sum = ready.length ? H.mockSummary(ready[0]) : null;
-    [[String(all.length), "Mocks in file"], [String(ready.length), "Ready to attempt"], [String(done), "Attempted"], [sum ? String(Math.round(sum.seconds / 60)) : "-", "Minutes per mock"]].forEach(function (it) {
+    [[String(all.length), S.mode === "live" ? "Live tests" : "Mocks in file"], [String(ready.length), "Ready to attempt"], [String(done), "Attempted"], [sum ? String(Math.round(sum.seconds / 60)) : "-", "Minutes per mock"]].forEach(function (it) {
       var d = el("div", "hero-stat"); d.appendChild(el("b", null, it[0])); d.appendChild(el("span", null, it[1])); box.appendChild(d);
     });
+  }
+
+  function buildMode() {
+    var seg = $("modeSeg"); clear(seg);
+    [["test", "TEST"], ["live", "LIVE"]].forEach(function (f) {
+      var b = el("button", null); b.type = "button";
+      if (f[0] === "live") b.appendChild(el("span", "live-dot"));
+      b.appendChild(document.createTextNode(f[1]));
+      if (f[0] === "test" && !G.isAdmin()) { var lk = el("span", "lk", "\uD83D\uDD12"); lk.setAttribute("aria-label", "locked"); b.appendChild(lk); }
+      b.setAttribute("aria-pressed", String(S.mode === f[0]));
+      b.addEventListener("click", function () { setMode(f[0]); });
+      seg.appendChild(b);
+    });
+    $("lockBtn").hidden = !G.isAdmin();
+  }
+
+  function setMode(m) {
+    if (m === S.mode) return;
+    if (m === "test" && !G.isAdmin()) {
+      G.prompt().then(function (ok) { if (ok) applyMode("test"); else buildMode(); });
+      return;
+    }
+    applyMode(m);
+  }
+  function applyMode(m) {
+    S.mode = m; S.filter = "all";
+    try { localStorage.setItem(MODE_KEY, m); } catch (e) {}
+    buildMode(); buildFilters(); load();
   }
 
   function buildFilters() {
@@ -51,7 +82,7 @@
       if (S.filter === "done") { var st = ok && H.readStatus(YEAR, SUBJ, setId(m)); return st && st.kind === "done"; }
       return true;
     });
-    if (!list.length) { var e = el("div", "empty"); e.appendChild(el("b", null, "No mocks here yet.")); e.appendChild(document.createTextNode("Change the filter to see the other mocks.")); sheet.appendChild(e); return; }
+    if (!list.length) { var e = el("div", "empty"); e.appendChild(el("b", null, S.mode === "live" ? "No live tests yet." : "No mocks here yet.")); e.appendChild(document.createTextNode(S.mode === "live" ? "New live tests will appear here as soon as they are added." : "Change the filter to see the other mocks.")); sheet.appendChild(e); return; }
 
     var cols = el("div", "cols");
     ["", "Mock", "Questions", "Duration", "Marks", "Status", ""].forEach(function (t) { cols.appendChild(el("span", null, t)); });
@@ -63,7 +94,9 @@
       var st = ready ? H.readStatus(YEAR, SUBJ, setId(m)) : null;
       var row = el("div", "row"), bc = el("div", "bubcell"), bub = el("span", "bub" + (st ? " " + st.kind : ""));
       bc.appendChild(bub); row.appendChild(bc);
-      row.appendChild(el("div", "tname", "Mock " + m.mock));
+      var tn = el("div", "tname", m.live ? m.title : "Mock " + m.mock);
+      if (m.live && m.extracted) { var dd = new Date(m.extracted); if (!isNaN(dd)) tn.appendChild(el("span", "tsub", "Added " + dd.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }))); }
+      row.appendChild(tn);
 
       var nums = el("div", "nums");
       var q = el("span", null, sum ? String(sum.questions) : "-"); q.setAttribute("data-u", "questions");
@@ -102,20 +135,26 @@
   }
 
   function load() {
-    var seq = ++S.seq;
-    showNote("Loading mocks.", "Please wait.", false, true);
-    H.fetchSubject(YEAR, SUBJ, function (bytes) {
-      if (seq === S.seq) showNote("Loading mocks.", (bytes / 1048576).toFixed(1) + " MB received", false, true);
-    }).then(function (json) {
+    var seq = ++S.seq, mode = S.mode;
+    S.data = null; clear($("sheet")); renderStats();
+    function done(json) {
       if (seq !== S.seq) return;
-      S.data = json; $("note").hidden = true; renderStats(); renderSheet();
-    }).catch(function (e) {
+      S.cache[mode] = json; S.data = json; $("note").hidden = true; renderStats(); renderSheet();
+    }
+    if (S.cache[mode]) { done(S.cache[mode]); return; }
+    showNote("Loading mocks.", "Please wait.", false, true);
+    var p = mode === "live"
+      ? H.loadLive(function (bytes) { if (seq === S.seq) showNote("Loading live tests.", (bytes / 1048576).toFixed(1) + " MB received", false, true); })
+      : H.fetchSubject(YEAR, SUBJ, function (bytes) { if (seq === S.seq) showNote("Loading mocks.", (bytes / 1048576).toFixed(1) + " MB received", false, true); });
+    p.then(done).catch(function (e) {
+      if (seq !== S.seq) return;
       var d = H.describeError(e, YEAR, SUBJ); showNote(d.msg, d.sub, true, false);
     });
   }
 
   function init() {
-    buildFilters(); renderStats();
+    buildMode(); buildFilters(); renderStats();
+    $("lockBtn").addEventListener("click", function () { G.lock(); if (S.mode === "test") applyMode("live"); else buildMode(); });
     function savedCount() { var n = H.countSaved(), b = $("savedCount"); if (b) b.textContent = n ? " (" + n + ")" : ""; }
     savedCount();
     function refresh() { savedCount(); if (S.data) { renderStats(); renderSheet(); } }
