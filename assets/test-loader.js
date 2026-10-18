@@ -16,10 +16,18 @@
     fail("This test link is incomplete.", "Open Mock Hub, choose a chapter and press Start test.");
     return;
   }
-  $("loadSub").textContent = year + " " + subject;
+  var isLive = /^live_/.test(id);
+  var tag = isLive ? "Live test" : year + " " + subject;
+  $("loadSub").textContent = tag;
 
-  H.fetchSubject(year, subject, function (bytes) {
-    $("loadSub").textContent = year + " " + subject + " - " + (bytes / 1048576).toFixed(1) + " MB received";
+  /* TEST module is admin-only; LIVE tests are public */
+  var gate = (isLive || (window.AdminGate && AdminGate.isAdmin())) ? Promise.resolve(true) : AdminGate.prompt();
+
+  gate.then(function (ok) {
+    if (!ok) { location.replace("index.html"); return new Promise(function () {}); }
+    return H.loadData(year, subject, id, function (bytes) {
+      $("loadSub").textContent = tag + " - " + (bytes / 1048576).toFixed(1) + " MB received";
+    });
   }).then(function (json) {
     var found = H.findSet(json, id);
     if (!found) { fail("Test not found.", "\"" + id + "\" is not present in this data file. Choose the test again from Mock Hub."); return; }
