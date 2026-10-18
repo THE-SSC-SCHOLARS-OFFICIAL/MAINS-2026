@@ -9,6 +9,9 @@ window.HUB_CONFIG = {
      so browsers do not keep serving an old cached copy. */
   dataVersion: "1",
 
+  /* LIVE tests: every single-test JSON placed in this folder shows up in the hub's LIVE tab automatically */
+  liveDir: "data/live",
+
   years: ["2026"],
 
   /* key = part of the file name (2026_<key>.json), label = name shown around the site */
