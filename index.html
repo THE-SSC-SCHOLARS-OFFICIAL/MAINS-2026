@@ -25,6 +25,7 @@
       <a class="chip-btn" id="dashLink" href="dashboard.html">Dashboard</a>
       <a class="chip-btn" id="savedLink" href="saved.html">Saved<span id="savedCount"></span></a>
       <button class="chip-btn" id="backupBtn" type="button">Backup</button>
+      <button class="chip-btn" id="lockBtn" type="button" hidden title="Lock the Test module again">Lock</button>
     </div>
   </header>
 
@@ -38,6 +39,10 @@
 
     <div class="eyebrow">Select a mock</div>
     <section class="picker" aria-label="Filter mocks">
+      <div class="field">
+        <span class="lbl" id="mLbl">Section</span>
+        <div class="seg" id="modeSeg" role="group" aria-labelledby="mLbl"></div>
+      </div>
       <div class="field">
         <span class="lbl" id="fLbl">Show</span>
         <div class="seg" id="filterSeg" role="group" aria-labelledby="fLbl"></div>
@@ -56,6 +61,7 @@
 
 <script src="assets/config.js"></script>
 <script src="assets/common.js"></script>
+<script src="assets/gate.js"></script>
 <script src="assets/hub.js"></script>
 <script src="assets/backup.js"></script>
 </body>
