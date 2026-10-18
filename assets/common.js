@@ -72,8 +72,12 @@
   /* ---- JSON structure helpers ---- */
   function findSet(json, setId) {
     if (json && Array.isArray(json.mocks)) {            /* full-mock file (Mains) */
+      if (/^live_/.test(String(setId))) {                /* live test */
+        for (var j = 0; j < json.mocks.length; j++) if (json.mocks[j].id === setId) return { mock: json.mocks[j] };
+        return null;
+      }
       var mm = String(setId).match(/^mock_(\d+)$/), no = mm ? parseInt(mm[1], 10) : -1;
-      for (var k = 0; k < json.mocks.length; k++) if (json.mocks[k].mock === no) return { mock: json.mocks[k] };
+      for (var k = 0; k < json.mocks.length; k++) if (json.mocks[k].mock === no && !json.mocks[k].live) return { mock: json.mocks[k] };
       return null;
     }
     var cats = json.categories || [];
@@ -297,20 +301,100 @@
         start: start, end: start + n, count: n, seconds: g.def.minutes * 60, minutes: g.def.minutes });
       start += n; total += g.def.minutes * 60;
     });
-    var setId = "mock_" + mock.mock;
+    var setId = mock.live ? mock.id : "mock_" + mock.mock;
     return {
       cfg: {
-        examTitle: "SSC CGL " + year + " MAINS - MOCK " + mock.mock,
-        sectionLabel: "Full Mock", mockNo: mock.mock,
+        examTitle: mock.live ? String(mock.title || "Live Test").toUpperCase() : "SSC CGL " + year + " MAINS - MOCK " + mock.mock,
+        sectionLabel: mock.live ? "Live Test" : "Full Mock", mockNo: mock.mock,
         storageKey: storageKey(year, subject, setId),
         year: String(year), subject: subject, setId: setId,
-        chapterName: "", setTitle: "Mock " + mock.mock,
+        chapterName: "", setTitle: mock.live ? String(mock.title || "Live Test") : "Mock " + mock.mock,
         sections: sections, totalTimeSeconds: total,
         correctScoreDisplay: fmtScore(cs), negativeScoreDisplay: fmtScore(ns),
         defaultCorrectScore: cs, defaultNegativeScore: ns
       },
       questions: questions
     };
+  }
+
+
+  /* ================= LIVE TESTS =================
+     Every file in data/live/ is one live test (single-test JSON: {meta, sections}).
+     Files are found automatically: GitHub folder listing (when hosted on GitHub Pages)
+     plus the optional data/live/index.json list. */
+  var liveCache = null;
+  function slug(t) { return String(t || "").toLowerCase().replace(/\.json$/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "test"; }
+
+  function listLiveFiles() {
+    var dir = (C.liveDir || "data/live").replace(/\/+$/, ""), names = {};
+    function add(n) { n = String(n || "").split("/").pop(); if (/\.json$/i.test(n) && n.toLowerCase() !== "index.json") names[n] = 1; }
+
+    var viaManifest = fetch(dir + "/index.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (j) { (Array.isArray(j) ? j : (j && j.files) || []).forEach(add); })
+      .catch(function () {});
+
+    var viaGithub = Promise.resolve();
+    var host = location.hostname, m = host.match(/^(.+)\.github\.io$/i);
+    if (C.liveRepo || m) {
+      var repo = C.liveRepo;
+      if (!repo) {
+        var first = location.pathname.split("/")[1];
+        repo = m[1] + "/" + ((first && !/\.html?$/i.test(first)) ? first : host);
+      }
+      var ck = "sscscholars_live_ls_" + repo, cached = null;
+      try { cached = JSON.parse(sessionStorage.getItem(ck) || "null"); } catch (e) {}
+      if (cached && Date.now() - cached.t < 60000) { cached.n.forEach(add); }
+      else {
+        viaGithub = fetch("https://api.github.com/repos/" + repo + "/contents/" + dir, { headers: { Accept: "application/vnd.github+json" } })
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (arr) {
+            var got = (Array.isArray(arr) ? arr : []).filter(function (f) { return f.type === "file"; }).map(function (f) { return f.name; });
+            got.forEach(add);
+            try { sessionStorage.setItem(ck, JSON.stringify({ t: Date.now(), n: got })); } catch (e) {}
+          }).catch(function () {});
+      }
+    }
+    return Promise.all([viaManifest, viaGithub]).then(function () { return Object.keys(names).sort(); });
+  }
+
+  function liveToMock(j, file) {
+    if (!j || !Array.isArray(j.sections) || !j.sections.length) return null;
+    var meta = j.meta || {}, tid = meta.test_id != null && String(meta.test_id).trim() !== "" ? String(meta.test_id).replace(/[^A-Za-z0-9]+/g, "") : "";
+    return {
+      id: "live_" + (tid || slug(file)), mock: tid || slug(file), live: true, file: file,
+      title: String(meta.exam || meta.title || file.replace(/\.json$/i, "")),
+      extracted: meta.extracted_at || "",
+      subjects: j.sections.map(function (s) { return { subject: s.name || s.short || "", questions: s.questions || [] }; })
+    };
+  }
+
+  function loadLive(onProgress) {
+    if (liveCache) return Promise.resolve(liveCache);
+    return listLiveFiles().then(function (files) {
+      var dir = (C.liveDir || "data/live").replace(/\/+$/, ""), got = 0;
+      return Promise.all(files.map(function (f) {
+        return fetch(dir + "/" + encodeURIComponent(f), { cache: "no-cache" })
+          .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+          .then(function (t) { got += t.length; if (onProgress) onProgress(got); return liveToMock(JSON.parse(t), f); })
+          .catch(function () { return null; });
+      }));
+    }).then(function (arr) {
+      var byId = {};
+      arr.filter(Boolean).forEach(function (m) {
+        var o = byId[m.id];
+        if (!o || String(m.extracted) > String(o.extracted)) byId[m.id] = m;
+      });
+      var mocks = Object.keys(byId).map(function (k) { return byId[k]; });
+      mocks.sort(function (a, b) { return String(b.extracted).localeCompare(String(a.extracted)) || String(b.file).localeCompare(String(a.file)); });
+      liveCache = { mocks: mocks, live: true };
+      return liveCache;
+    });
+  }
+
+  /* one entry point for hub / test page / saved page: live ids come from data/live, everything else from the Test file */
+  function loadData(year, subject, setId, onProgress) {
+    return /^live_/.test(String(setId || "")) ? loadLive(onProgress) : fetchSubject(year, subject, onProgress);
   }
 
   /* ---- Saved (bookmarked) questions: kept in this browser only ---- */
@@ -372,7 +456,7 @@
   }
 
   window.HubCommon = {
-    dataUrl: dataUrl, fetchSubject: fetchSubject, describeError: describeError,
+    loadLive: loadLive, loadData: loadData, dataUrl: dataUrl, fetchSubject: fetchSubject, describeError: describeError,
     storageKey: storageKey, readStatus: readStatus, findSet: findSet,
     buildTest: buildTest, mockSections: mockSections, mockReady: mockReady, mockSummary: mockSummary, getAttempts: getAttempts, addAttempt: addAttempt, getAttempt: getAttempt, fmtAttemptDate: fmtAttemptDate, readSaved: readSaved, addSaved: addSaved, removeSaved: removeSaved, savedId: savedId, countSaved: countSaved, unescapeTags: unescapeTags, decodeText: decodeText, fmtScore: fmtScore, shortSubjectLabel: shortSubjectLabel
   };
