@@ -29,11 +29,11 @@ window.HUB_CONFIG = {
     correct: 3,
     negative: 1,
     sections: [
-      { key: "maths",     name: "Mathematical Abilities",              short: "Maths",     match: ["math"],                         minutes: 30, part: 1 },
-      { key: "reasoning", name: "Reasoning and General Intelligence",  short: "Reasoning", match: ["reason"],                       minutes: 30, part: 1 },
+      { key: "maths",     name: "Mathematical Abilities",              short: "Maths",     match: ["math", "quant"],                         minutes: 30, part: 1 },
+      { key: "reasoning", name: "Reasoning and General Intelligence",  short: "Reasoning", match: ["reason", "intelligence"],                       minutes: 30, part: 1 },
       { key: "english",   name: "English",                             short: "English",   match: ["english"],                      minutes: 40, part: 2 },
       { key: "gs",        name: "General Awareness",                   short: "GS",        match: ["general awareness", "gk", "gs"], minutes: 20, part: 2 },
-      { key: "computer",  name: "Computer Knowledge",                  short: "Computer",  match: ["computer"],                     minutes: 15, part: 3, qualifying: true }
+      { key: "computer",  name: "Computer Knowledge",                  short: "Computer",  match: ["computer"],                     minutes: 15, part: 3, qualifying: true, optionalInLive: true }
     ]
   }
 };
