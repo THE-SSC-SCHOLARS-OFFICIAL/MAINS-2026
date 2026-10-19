@@ -259,8 +259,8 @@
       if (at < 0 && (mock.subjects || []).length === secs.length && !used[idx]) at = idx;
       if (at >= 0 && !used[at] && (sb.questions || []).length) { used[at] = 1; got[at] = { def: secs[at], questions: sb.questions }; }
     });
-    for (var i = 0; i < secs.length; i++) if (!got[i]) return null;
-    return got;
+    for (var i = 0; i < secs.length; i++) if (!got[i] && !(mock.live && secs[i].optionalInLive)) return null;
+    return got.filter(Boolean);
   }
   function mockReady(mock) { return !!mockSections(mock); }
   function mockSummary(mock) {
