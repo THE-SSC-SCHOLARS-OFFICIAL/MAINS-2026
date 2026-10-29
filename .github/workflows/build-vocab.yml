@@ -1,0 +1,39 @@
+name: Build vocabulary sets
+
+# Jab bhi data/ me koi mock / live JSON add ya change hoga, vocabulary sets khud ban jayenge.
+on:
+  push:
+    paths:
+      - "data/*.json"
+      - "data/live/*.json"
+      - "tools/build_vocab.py"
+  workflow_dispatch:          # Actions tab se manually "Run workflow" bhi chal sakta hai
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-vocab
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build vocabulary sets
+        run: python3 tools/build_vocab.py
+
+      - name: Commit new sets (only if something changed)
+        run: |
+          git config user.name  "vocab-bot"
+          git config user.email "vocab-bot@users.noreply.github.com"
+          git add data/vocab
+          if git diff --cached --quiet; then
+            echo "No new vocabulary sets."
+          else
+            git commit -m "Auto: new vocabulary sets"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push
+          fi
