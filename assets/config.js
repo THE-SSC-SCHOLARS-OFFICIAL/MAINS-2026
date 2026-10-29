@@ -16,8 +16,19 @@ window.HUB_CONFIG = {
 
   /* key = part of the file name (2026_<key>.json), label = name shown around the site */
   subjects: [
-    { key: "Mains", label: "SSC CGL Mains Full Mock" }
+    { key: "Mains", label: "SSC CGL Mains Full Mock" },
+    { key: "Vocab", label: "Vocabulary Sets" }          /* auto-built 25-question vocabulary sets (data/vocab) */
   ],
+
+  /* ---- Vocabulary sets (built automatically by tools/build_vocab.py -> data/vocab/) ---- */
+  vocab: {
+    dir: "data/vocab",
+    subjectKey: "Vocab",     /* must match the subject key above */
+    questions: 25,
+    minutes: 15,
+    correct: 3,
+    negative: 1
+  },
 
   /* ---- Full mock pattern (SSC CGL Tier II / Mains) ----
      Sections run strictly in this order. Each section has its own timer.

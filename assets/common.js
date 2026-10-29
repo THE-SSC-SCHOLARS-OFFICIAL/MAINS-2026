@@ -72,7 +72,7 @@
   /* ---- JSON structure helpers ---- */
   function findSet(json, setId) {
     if (json && Array.isArray(json.mocks)) {            /* full-mock file (Mains) */
-      if (/^live_/.test(String(setId))) {                /* live test */
+      if (/^(live|vocab)_/.test(String(setId))) {           /* live test / vocabulary set */
         for (var j = 0; j < json.mocks.length; j++) if (json.mocks[j].id === setId) return { mock: json.mocks[j] };
         return null;
       }
@@ -208,6 +208,7 @@
 
   /* One set from the JSON -> engine config + questions */
   function buildTest(json, found, year, subject) {
+    if (found.mock && found.mock.vocab) return buildVocab(found.mock, year, subject);
     if (found.mock) return buildMains(json, found.mock, year, subject);
     var set = found.set, chapter = found.chapter, category = found.category;
     var meta = chapter.api_meta || {};
@@ -262,8 +263,9 @@
     for (var i = 0; i < secs.length; i++) if (!got[i] && !(mock.live && secs[i].optionalInLive)) return null;
     return got.filter(Boolean);
   }
-  function mockReady(mock) { return !!mockSections(mock); }
+  function mockReady(mock) { return mock.vocab ? true : !!mockSections(mock); }
   function mockSummary(mock) {
+    if (mock.vocab) { var vc = vocabCfg(), n = mock.count || vc.questions; return { questions: n, seconds: vc.minutes * 60, marks: n * vc.correct, mainMarks: n * vc.correct }; }
     var g = mockSections(mock); if (!g) return null;
     var q = 0, sec = 0, marks = 0, main = 0, cs = mainsCfg().correct;
     g.forEach(function (x) { q += x.questions.length; sec += x.def.minutes * 60; marks += x.questions.length * cs; if (!x.def.qualifying) main += x.questions.length * cs; });
@@ -312,6 +314,71 @@
         sections: sections, totalTimeSeconds: total,
         correctScoreDisplay: fmtScore(cs), negativeScoreDisplay: fmtScore(ns),
         defaultCorrectScore: cs, defaultNegativeScore: ns
+      },
+      questions: questions
+    };
+  }
+
+
+  /* ================= VOCABULARY SETS =================
+     data/vocab/index.json lists every set; data/vocab/<id>.json holds the 25 questions of one set.
+     Both are written by tools/build_vocab.py (GitHub Action), so nothing here needs editing when new mocks arrive. */
+  function vocabCfg() {
+    var v = C.vocab || {};
+    return { dir: (v.dir || "data/vocab").replace(/\/+$/, ""), key: v.subjectKey || "Vocab", questions: v.questions || 25, minutes: v.minutes || 15,
+             correct: v.correct != null ? v.correct : 3, negative: v.negative != null ? v.negative : 1 };
+  }
+  var vocabIdxCache = null, vocabSetCache = {};
+  function loadVocabIndex() {
+    if (vocabIdxCache) return Promise.resolve(vocabIdxCache);
+    var vc = vocabCfg();
+    return fetch(vc.dir + "/index.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : { sets: [] }; })
+      .catch(function () { return { sets: [] }; })
+      .then(function (j) {
+        var sets = (j && j.sets) || [];
+        var mocks = sets.map(function (s) {
+          return { id: s.id, mock: s.no, vocab: true, live: false, title: s.title || ("Vocab Set " + s.no), count: s.count, cats: s.cats || {}, added: s.added || "", file: s.file, no: s.no, subjects: [] };
+        });
+        mocks.sort(function (a, b) { return b.no - a.no; });
+        vocabIdxCache = { mocks: mocks, vocab: true };
+        return vocabIdxCache;
+      });
+  }
+  /* one set -> {mocks:[mock]} in the shape findSet/buildTest expect */
+  function loadVocabSet(setId) {
+    if (vocabSetCache[setId]) return Promise.resolve(vocabSetCache[setId]);
+    var vc = vocabCfg();
+    return loadVocabIndex().then(function (idx) {
+      var meta = null;
+      idx.mocks.forEach(function (m) { if (m.id === setId) meta = m; });
+      if (!meta) { var e = new Error("Vocabulary set not found"); e.status = 404; e.url = vc.dir + "/index.json"; throw e; }
+      return fetch(vc.dir + "/" + encodeURIComponent(meta.file), { cache: "no-cache" }).then(function (r) {
+        if (!r.ok) { var e2 = new Error("HTTP " + r.status); e2.status = r.status; e2.url = vc.dir + "/" + meta.file; throw e2; }
+        return r.json();
+      }).then(function (j) {
+        var mock = { id: meta.id, mock: meta.no, vocab: true, live: false, title: meta.title, count: (j.questions || []).length, no: meta.no, subjects: [{ subject: "Vocabulary", questions: j.questions || [] }] };
+        vocabSetCache[setId] = { mocks: [mock], vocab: true };
+        return vocabSetCache[setId];
+      });
+    });
+  }
+  function buildVocab(mock, year, subject) {
+    var vc = vocabCfg(), qs = (mock.subjects[0] && mock.subjects[0].questions) || [], questions = [];
+    qs.forEach(function (q) { questions.push(normMainsQ(q, questions.length, vc.correct, vc.negative)); });
+    var n = questions.length, secs = vc.minutes * 60;
+    return {
+      cfg: {
+        examTitle: String(mock.title || "Vocabulary Set").toUpperCase(),
+        sectionLabel: "Vocabulary", mockNo: mock.no,
+        storageKey: storageKey(year, subject, mock.id),
+        year: String(year), subject: subject, setId: mock.id,
+        chapterName: "Vocabulary", setTitle: String(mock.title || "Vocabulary Set"),
+        vocab: true,
+        sections: [{ key: "vocab", name: "Vocabulary", short: "Vocab", part: 1, qualifying: false, start: 0, end: n, count: n, seconds: secs, minutes: vc.minutes }],
+        totalTimeSeconds: secs,
+        correctScoreDisplay: fmtScore(vc.correct), negativeScoreDisplay: fmtScore(vc.negative),
+        defaultCorrectScore: vc.correct, defaultNegativeScore: vc.negative
       },
       questions: questions
     };
@@ -394,7 +461,9 @@
 
   /* one entry point for hub / test page / saved page: live ids come from data/live, everything else from the Test file */
   function loadData(year, subject, setId, onProgress) {
-    return /^live_/.test(String(setId || "")) ? loadLive(onProgress) : fetchSubject(year, subject, onProgress);
+    var id = String(setId || "");
+    if (/^vocab_/.test(id)) return loadVocabSet(id);
+    return /^live_/.test(id) ? loadLive(onProgress) : fetchSubject(year, subject, onProgress);
   }
 
   /* ---- Saved (bookmarked) questions: kept in this browser only ---- */
@@ -456,7 +525,7 @@
   }
 
   window.HubCommon = {
-    loadLive: loadLive, loadData: loadData, dataUrl: dataUrl, fetchSubject: fetchSubject, describeError: describeError,
+    loadLive: loadLive, loadData: loadData, loadVocabIndex: loadVocabIndex, vocabCfg: vocabCfg, dataUrl: dataUrl, fetchSubject: fetchSubject, describeError: describeError,
     storageKey: storageKey, readStatus: readStatus, findSet: findSet,
     buildTest: buildTest, mockSections: mockSections, mockReady: mockReady, mockSummary: mockSummary, getAttempts: getAttempts, addAttempt: addAttempt, getAttempt: getAttempt, fmtAttemptDate: fmtAttemptDate, readSaved: readSaved, addSaved: addSaved, removeSaved: removeSaved, savedId: savedId, countSaved: countSaved, unescapeTags: unescapeTags, decodeText: decodeText, fmtScore: fmtScore, shortSubjectLabel: shortSubjectLabel
   };

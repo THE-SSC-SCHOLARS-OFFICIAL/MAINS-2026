@@ -4,7 +4,8 @@
   var YEAR = C.years[0], SUBJ = C.subjects[0].key;
   var G = window.AdminGate;
   var MODE_KEY = "sscscholars_hub_mode";
-  function startMode() { var m = "live"; try { m = localStorage.getItem(MODE_KEY) || "live"; } catch (e) {} return (m === "test" && G.isAdmin()) ? "test" : "live"; }
+  function startMode() { var m = "live"; try { m = localStorage.getItem(MODE_KEY) || "live"; } catch (e) {} if (m === "vocab") return "vocab"; return (m === "test" && G.isAdmin()) ? "test" : "live"; }
+  var VK = H.vocabCfg().key;   /* subject key used for vocabulary sets (own stats on the dashboard) */
   var S = { data: null, filter: "all", seq: 0, mode: startMode(), cache: {} };
   var FILTERS = [["all", "All"], ["ready", "Ready"], ["done", "Attempted"]];
 
@@ -22,22 +23,23 @@
   }
 
   function mocks() { return (S.data && S.data.mocks) || []; }
-  function setId(m) { return m.live ? m.id : "mock_" + m.mock; }
-  function startUrl(m) { return "test.html?y=" + encodeURIComponent(YEAR) + "&s=" + encodeURIComponent(SUBJ) + "&id=" + encodeURIComponent(setId(m)); }
+  function setId(m) { return (m.live || m.vocab) ? m.id : "mock_" + m.mock; }
+  function subjOf(m) { return m.vocab ? VK : SUBJ; }
+  function startUrl(m) { return "test.html?y=" + encodeURIComponent(YEAR) + "&s=" + encodeURIComponent(subjOf(m)) + "&id=" + encodeURIComponent(setId(m)); }
 
   function renderStats() {
     var box = $("heroStats"); clear(box);
     var all = mocks(), ready = all.filter(H.mockReady), done = 0;
-    ready.forEach(function (m) { var st = H.readStatus(YEAR, SUBJ, setId(m)); if (st && st.kind === "done") done++; });
+    ready.forEach(function (m) { var st = H.readStatus(YEAR, subjOf(m), setId(m)); if (st && st.kind === "done") done++; });
     var sum = ready.length ? H.mockSummary(ready[0]) : null;
-    [[String(all.length), S.mode === "live" ? "Live tests" : "Mocks in file"], [String(ready.length), "Ready to attempt"], [String(done), "Attempted"], [sum ? String(Math.round(sum.seconds / 60)) : "-", "Minutes per mock"]].forEach(function (it) {
+    [[String(all.length), S.mode === "live" ? "Live tests" : S.mode === "vocab" ? "Vocab sets" : "Mocks in file"], [String(ready.length), "Ready to attempt"], [String(done), "Attempted"], [sum ? String(Math.round(sum.seconds / 60)) : "-", S.mode === "vocab" ? "Minutes per set" : "Minutes per mock"]].forEach(function (it) {
       var d = el("div", "hero-stat"); d.appendChild(el("b", null, it[0])); d.appendChild(el("span", null, it[1])); box.appendChild(d);
     });
   }
 
   function buildMode() {
     var seg = $("modeSeg"); clear(seg);
-    [["test", "TEST"], ["live", "LIVE"]].forEach(function (f) {
+    [["test", "TEST"], ["live", "LIVE"], ["vocab", "VOCAB"]].forEach(function (f) {
       var b = el("button", null); b.type = "button";
       if (f[0] === "live") b.appendChild(el("span", "live-dot"));
       b.appendChild(document.createTextNode(f[1]));
@@ -79,10 +81,10 @@
     var list = mocks().filter(function (m) {
       var ok = H.mockReady(m);
       if (S.filter === "ready") return ok;
-      if (S.filter === "done") { var st = ok && H.readStatus(YEAR, SUBJ, setId(m)); return st && st.kind === "done"; }
+      if (S.filter === "done") { var st = ok && H.readStatus(YEAR, subjOf(m), setId(m)); return st && st.kind === "done"; }
       return true;
     });
-    if (!list.length) { var e = el("div", "empty"); e.appendChild(el("b", null, S.mode === "live" ? "No live tests yet." : "No mocks here yet.")); e.appendChild(document.createTextNode(S.mode === "live" ? "New live tests will appear here as soon as they are added." : "Change the filter to see the other mocks.")); sheet.appendChild(e); return; }
+    if (!list.length) { var e = el("div", "empty"); e.appendChild(el("b", null, S.mode === "live" ? "No live tests yet." : S.mode === "vocab" ? "No vocabulary sets yet." : "No mocks here yet.")); e.appendChild(document.createTextNode(S.mode === "live" ? "New live tests will appear here as soon as they are added." : S.mode === "vocab" ? "Sets are built automatically from the English questions of every mock. A new set appears after every 25 new vocabulary questions." : "Change the filter to see the other mocks.")); sheet.appendChild(e); return; }
 
     var cols = el("div", "cols");
     ["", "Mock", "Questions", "Duration", "Marks", "Status", ""].forEach(function (t) { cols.appendChild(el("span", null, t)); });
@@ -91,10 +93,11 @@
     var rows = el("div", "rows");
     list.forEach(function (m) {
       var ready = H.mockReady(m), sum = ready ? H.mockSummary(m) : null;
-      var st = ready ? H.readStatus(YEAR, SUBJ, setId(m)) : null;
+      var st = ready ? H.readStatus(YEAR, subjOf(m), setId(m)) : null;
       var row = el("div", "row"), bc = el("div", "bubcell"), bub = el("span", "bub" + (st ? " " + st.kind : ""));
       bc.appendChild(bub); row.appendChild(bc);
-      var tn = el("div", "tname", m.live ? m.title : "Mock " + m.mock);
+      var tn = el("div", "tname", (m.live || m.vocab) ? m.title : "Mock " + m.mock);
+      if (m.vocab && m.cats) { var cs = Object.keys(m.cats).sort(function (a, b) { return m.cats[b] - m.cats[a]; }).slice(0, 4).map(function (k) { return k + " " + m.cats[k]; }).join(" \u00B7 "); if (cs) tn.appendChild(el("span", "tsub", cs)); }
       if (m.live && m.extracted) { var dd = new Date(m.extracted); if (!isNaN(dd)) tn.appendChild(el("span", "tsub", "Added " + dd.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }))); }
       row.appendChild(tn);
 
@@ -116,7 +119,7 @@
       var acts = el("div", "acts");
       if (btn) {
         var a = el("a", "go", btn); a.href = startUrl(m) + (startNew ? "&new=1" : ""); a.target = "_blank"; a.rel = "noopener"; acts.appendChild(a);
-        var atts = H.getAttempts(YEAR, SUBJ, setId(m));
+        var atts = H.getAttempts(YEAR, subjOf(m), setId(m));
         if (atts.length) {
           var sel = el("select", "att-sel"); sel.setAttribute("aria-label", "Review a past attempt");
           var ph = el("option", null, "Attempts (" + atts.length + ")"); ph.value = ""; sel.appendChild(ph);
@@ -143,7 +146,9 @@
     }
     if (S.cache[mode]) { done(S.cache[mode]); return; }
     showNote("Loading mocks.", "Please wait.", false, true);
-    var p = mode === "live"
+    var p = mode === "vocab"
+      ? H.loadVocabIndex()
+      : mode === "live"
       ? H.loadLive(function (bytes) { if (seq === S.seq) showNote("Loading live tests.", (bytes / 1048576).toFixed(1) + " MB received", false, true); })
       : H.fetchSubject(YEAR, SUBJ, function (bytes) { if (seq === S.seq) showNote("Loading mocks.", (bytes / 1048576).toFixed(1) + " MB received", false, true); });
     p.then(done).catch(function (e) {

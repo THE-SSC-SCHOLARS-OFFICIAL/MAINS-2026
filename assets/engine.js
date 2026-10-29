@@ -347,7 +347,7 @@ function initStaticText(){
   var rows = "";
   SECS.forEach(function(x){
     var m = 0; for(var i=x.start;i<x.end;i++) m += qScore(QUESTIONS[i]);
-    rows += "<tr><td>Part " + x.part + "</td><td>" + escapeHtml(x.name) + (x.qualifying ? " <small>(qualifying)</small>" : "") + "</td><td>" + x.count + "</td><td>" + x.minutes + " min</td><td>" + r2(m) + "</td><td>" + posNeg + "</td></tr>";
+    rows += "<tr><td>" + (CFG.vocab ? "-" : "Part " + x.part) + "</td><td>" + escapeHtml(x.name) + (x.qualifying ? " <small>(qualifying)</small>" : "") + "</td><td>" + x.count + "</td><td>" + x.minutes + " min</td><td>" + r2(m) + "</td><td>" + posNeg + "</td></tr>";
   });
   $("ovRows").innerHTML = rows;
   $("insCor").textContent = CFG.correctScoreDisplay;
@@ -356,7 +356,12 @@ function initStaticText(){
   $("solHdrTitle").textContent = CFG.examTitle;
   $("resTitle").textContent = CFG.examTitle;
   var mainMax = 0; SECS.forEach(function(x){ if(!x.qualifying) mainMax += x.count * CFG.defaultCorrectScore; });
-  $("resSub").textContent = "Main Paper \u00B7 " + r2(mainMax) + " marks (Computer is qualifying, shown separately)";
+  $("resSub").textContent = CFG.vocab ? "Vocabulary Set \u00B7 " + r2(mainMax) + " marks" : "Main Paper \u00B7 " + r2(mainMax) + " marks (Computer is qualifying, shown separately)";
+  if(CFG.vocab){
+    $("insIntro").innerHTML = "This is a <b>Vocabulary practice set</b>: synonyms, antonyms, idioms, one-word substitution, spelling and more in <b>one section</b> with a single timer (shown top right).";
+    $("insSec").innerHTML = "You can move freely between all the questions. The test is submitted when you press <b>Submit Test</b>, or automatically when the timer ends.";
+    $("insComp").style.display = "none";
+  }
   $("mainMax").textContent = r2(mainMax);
   $("qMarks").innerHTML = '<span class="p">+' + CFG.correctScoreDisplay + '</span> / <span class="n">-' + CFG.negativeScoreDisplay + '</span>';
   if(hasHindi){
@@ -830,6 +835,7 @@ function renderResult(){
   var head = "<thead><tr><th>Section</th><th>Questions</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Score</th><th>Accuracy</th><th>Time</th></tr></thead><tbody>";
   var th = head, lastPart = 0, partSum = {};
   r.sections.filter(function(x){ return !x.qualifying; }).forEach(function(x, idx, arr){
+    if(CFG.vocab){ th += row(x, "", escapeHtml(x.name)); return; }
     th += row(x, "", escapeHtml(x.name) + ' <small style="color:var(--muted)">(Part ' + x.part + ")</small>");
     var next = arr[idx+1];
     if(!next || next.part !== x.part){
@@ -841,7 +847,7 @@ function renderResult(){
       }
     }
   });
-  th += row({total:r.total, attempted:r.attempted, correct:r.correct, wrong:r.wrong, score:r.score, maxMarks:r.maxMarks, accuracy:r.accuracy, timeTaken:r.timeTaken}, "tot", "Main Paper Total");
+  if(!CFG.vocab) th += row({total:r.total, attempted:r.attempted, correct:r.correct, wrong:r.wrong, score:r.score, maxMarks:r.maxMarks, accuracy:r.accuracy, timeTaken:r.timeTaken}, "tot", "Main Paper Total");
   $("secTable").innerHTML = th + "</tbody>";
 
   var cp = document.querySelector(".comp-panel");

@@ -212,7 +212,7 @@ function renderMath(root){
   function loadQuestion(e) {
     var key = e.y + "|" + e.s + "|" + e.set;
     if (qcache[key]) return Promise.resolve(qcache[key][e.i]);
-    return H.fetchSubject(e.y, e.s).then(function (json) {
+    return H.loadData(e.y, e.s, e.set).then(function (json) {
       var found = H.findSet(json, e.set);
       if (!found) throw new Error("This mock set is no longer in the data file.");
       qcache[key] = H.buildTest(json, found, e.y, e.s).questions;

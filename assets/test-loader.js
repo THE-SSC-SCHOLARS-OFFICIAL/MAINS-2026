@@ -16,8 +16,8 @@
     fail("This test link is incomplete.", "Open Mock Hub, choose a chapter and press Start test.");
     return;
   }
-  var isLive = /^live_/.test(id);
-  var tag = isLive ? "Live test" : year + " " + subject;
+  var isVocab = /^vocab_/.test(id), isLive = /^live_/.test(id) || isVocab;
+  var tag = isVocab ? "Vocabulary set" : isLive ? "Live test" : year + " " + subject;
   $("loadSub").textContent = tag;
 
   /* TEST module is admin-only; LIVE tests are public */
