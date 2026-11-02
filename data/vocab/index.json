@@ -542,8 +542,52 @@
     "8a1de2acce2c98c8"
    ],
    "added": "2026-10-29"
+  },
+  {
+   "id": "vocab_013",
+   "no": 13,
+   "file": "vocab_013.json",
+   "title": "Vocab Set 13",
+   "count": 25,
+   "cats": {
+    "One Word Substitution": 3,
+    "Homonym/Homophone": 2,
+    "Antonym": 5,
+    "Synonym": 4,
+    "Idiom & Phrase": 5,
+    "Spelling": 5,
+    "Fill in the Blank": 1
+   },
+   "keys": [
+    "ad3cbd14194c8fcd",
+    "1589b0aa6345de83",
+    "b2960fdb522fae5f",
+    "56a3c99366f3848e",
+    "3d7b697a5b714b62",
+    "96acd5f6c3beafcd",
+    "478178fd7fd901f4",
+    "f564ba7a1deecd19",
+    "3a6a9b057d093947",
+    "9baf427e92f2fa05",
+    "047c1a7d3ab4643a",
+    "af66b229c04776a5",
+    "037a7d7f67669de4",
+    "33ce71fdd4b0f0d3",
+    "2f83cf0ed916b408",
+    "9ebadec761985b05",
+    "e302ba3047e22682",
+    "bd24cbb1c27da03c",
+    "ea0a58d6115f1d9e",
+    "9ad6700dba3d91b0",
+    "9d2f9e20f89153a8",
+    "ef4f6bf0be27b012",
+    "8a682f4b2ae8f2fa",
+    "1b6822eabd208a23",
+    "b89238ee8548dc1b"
+   ],
+   "added": "2026-11-02"
   }
  ],
- "updated": "2026-10-29T03:26:20Z",
- "pending": 20
+ "updated": "2026-11-02T03:41:58Z",
+ "pending": 10
 }
