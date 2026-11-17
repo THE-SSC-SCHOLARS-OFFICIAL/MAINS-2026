@@ -586,8 +586,50 @@
     "b89238ee8548dc1b"
    ],
    "added": "2026-11-02"
+  },
+  {
+   "id": "vocab_014",
+   "no": 14,
+   "file": "vocab_014.json",
+   "title": "Vocab Set 14",
+   "count": 25,
+   "cats": {
+    "Synonym": 6,
+    "Antonym": 5,
+    "Idiom & Phrase": 5,
+    "One Word Substitution": 4,
+    "Spelling": 5
+   },
+   "keys": [
+    "08a019858d29d594",
+    "9e16fcb9f6b004b4",
+    "bf794e66203d2957",
+    "12503e5b58f6ceab",
+    "76873a5737f142c2",
+    "936694b516485f9e",
+    "c1cb67397538cc2d",
+    "be60753f47df174b",
+    "c3bd338caa288220",
+    "a46650dd56eeeb1a",
+    "2f590a879fcb7216",
+    "05757712304d5fa4",
+    "f14538f990710d50",
+    "a4726534d9d7b02c",
+    "9f7e31e1328f25bc",
+    "aea0716bfc2e2760",
+    "8f2fe639fa25fcea",
+    "1e616b08744bc272",
+    "c9d5f014e6b8126f",
+    "2f97deb221c856ea",
+    "829d46cbdc251d3a",
+    "f251f17a41dd078b",
+    "3db6cb46d0e5b824",
+    "5d61f5137685e533",
+    "412f3102f7e52d24"
+   ],
+   "added": "2026-11-17"
   }
  ],
- "updated": "2026-11-02T03:41:58Z",
- "pending": 10
+ "updated": "2026-11-17T04:45:23Z",
+ "pending": 9
 }
